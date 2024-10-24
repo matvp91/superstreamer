@@ -12,7 +12,10 @@ import {
   formatAssetList,
 } from "./playlist";
 
-export const app = new Elysia()
+export const app = new Elysia({
+  // TODO: Turn dynamic mode on, this is for serverless env
+  aot: false,
+})
   .use(cors())
   .use(
     swagger({

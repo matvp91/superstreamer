@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { DateTime } from "luxon";
-import { client } from "./redis";
+import { kv } from "./redis";
 import type { VmapResponse } from "./vmap";
 
 export type Session = {
@@ -29,12 +29,6 @@ export type SessionVmap = {
   url: string;
 };
 
-const REDIS_PREFIX = `stitcher:session`;
-
-function redisKey(sessionId: string) {
-  return `${REDIS_PREFIX}:${sessionId}`;
-}
-
 export async function createSession(data: {
   uri: string;
   interstitials?: SessionInterstitial[];
@@ -52,39 +46,25 @@ export async function createSession(data: {
     dt: DateTime.now(),
   };
 
-  const key = redisKey(sessionId);
-
-  await client.set(key, serializeToJson(session), {
-    EX: 60 * 60 * 6,
-  });
+  const ttl = 60 * 60 * 6; // 6 hours
+  await kv.set(`session:${sessionId}`, toSerializable(session), ttl);
 
   return session;
 }
 
 export async function getSession(sessionId: string) {
-  const data = await client.get(redisKey(sessionId));
-
+  const data = await kv.get(`session:${sessionId}`);
   if (!data) {
     throw new Error(`No session found with id "${sessionId}".`);
   }
-
-  if (typeof data !== "string") {
-    throw new SyntaxError(
-      "Redis did not return a string for session, cannot deserialize.",
-    );
-  }
-
   return parseFromJson(data);
 }
 
 export async function updateSession(session: Session) {
-  const key = redisKey(session.id);
-  await client.set(key, serializeToJson(session), {
-    EX: await client.ttl(key),
-  });
+  await kv.set(`session:${session.id}`, toSerializable(session), "preserve");
 }
 
-function serializeToJson(session: Session) {
+function toSerializable(session: Session) {
   return JSON.stringify({
     ...session,
     dt: session.dt.toISO(),

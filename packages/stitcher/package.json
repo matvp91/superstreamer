@@ -10,6 +10,7 @@
     "deploy:wrangler": "wrangler deploy --minify src/serverless/wrangler.ts"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241022.0",
     "@types/bun": "latest",
     "@types/hh-mm-ss": "^1.2.3",
     "@types/lru-cache": "^7.10.10",

@@ -10,3 +10,7 @@ REDIS_HOST = "redis"
 REDIS_PORT = "0000"
 PUBLIC_S3_ENDPOINT = "https://cdn.superstreamer.xyz"
 PUBLIC_STITCHER_ENDPOINT = "https://stitcher.superstreamer.xyz"
+
+[[kv_namespaces]]
+binding = "sessions"
+id = "0385981fe1df474ca3648f625e18ba33"

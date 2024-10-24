@@ -5,7 +5,6 @@ import { config } from "dotenv";
 import { formatFails } from "./typebox";
 
 let envConfigLoaded = false;
-let envVars: object | null = null;
 
 function loadConfigEnv() {
   if (envConfigLoaded) {
@@ -22,17 +21,23 @@ type ParseEnvResolve<R extends Parameters<typeof t.Object>[0]> = (
   typeBox: typeof t,
 ) => R;
 
-export function setEnvVars(vars: object) {
-  envVars = vars;
+export let env_: object | null = null;
+
+export function setEnv_(env: object) {
+  env_ = env;
 }
 
 export function parseEnv<R extends Parameters<typeof t.Object>[0]>(
   resolve: ParseEnvResolve<R>,
 ) {
-  loadConfigEnv();
+  if (!env_) {
+    // If we did not explicitly set them, eg; in a serverless env,
+    // we can load config.env instead.
+    loadConfigEnv();
+  }
 
   const schema = t.Object(resolve(t));
-  const env = envVars ?? process.env;
+  const env = env_ ?? process.env;
 
   try {
     return Value.Parse(schema, env);
