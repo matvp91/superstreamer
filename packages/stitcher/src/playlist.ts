@@ -14,6 +14,7 @@ import {
   stringifyMediaPlaylist,
 } from "./parser";
 import { updateSession } from "./session";
+import { getSignalingForAsset } from "./signaling";
 import { fetchVmap, toAdBreakTimeOffset } from "./vmap";
 import type { Filter } from "./filters";
 import type { MasterPlaylist, MediaPlaylist } from "./parser";
@@ -76,16 +77,15 @@ export async function formatMediaPlaylist(
 export async function formatAssetList(session: Session, dateTime: DateTime) {
   const assets = await getAssets(session, dateTime);
 
-  const assetsPromises = assets.map(async (asset) => {
-    return {
-      URI: asset.url,
-      DURATION: asset.duration ?? (await fetchDuration(asset.url)),
-      "SPRS-KIND": asset.kind,
-    };
-  });
-
   return {
-    ASSETS: await Promise.all(assetsPromises),
+    ASSETS: assets.map((asset) => {
+      return {
+        URI: asset.url,
+        DURATION: asset.duration,
+        "SPRS-KIND": asset.kind,
+        "X-AD-CREATIVE-SIGNALING": getSignalingForAsset(assets, asset),
+      };
+    }),
   };
 }
 
@@ -101,8 +101,7 @@ async function fetchMediaPlaylist(url: string) {
   return parseMediaPlaylist(result);
 }
 
-export async function fetchDuration(uri: string) {
-  const url = resolveUri(uri);
+export async function fetchDuration(url: string) {
   const variant = (await fetchMasterPlaylist(url))?.variants[0];
 
   if (!variant) {

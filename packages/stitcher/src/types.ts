@@ -7,8 +7,13 @@ export interface InterstitialVast {
 
 export interface InterstitialAsset {
   url: string;
-  duration?: number;
+  duration: number;
   kind?: "ad" | "bumper";
+  tracking?: {
+    impression: string[];
+    clickThrough: string[];
+    [key: string]: string[];
+  };
 }
 
 export interface InterstitialAssetList {
